@@ -439,7 +439,7 @@
                     <strong>CHAIN ID:</strong> 143 (0x8F)
                 </div>
                 <div class="info-item">
-                    <strong>RPC:</strong> gmonads.com
+                    <strong>RPC:</strong> rpc1.monad.xyz
                 </div>
                 <div class="info-item">
                     <strong>TOTAL SUPPLY:</strong> 1,000,000,000 SNADS
@@ -489,7 +489,7 @@
     <script>
         const CONTRACT_ADDRESS = '0x9F93da6f9202fF6566b35D4D1Da6e1bb4a64EB56';
         const TREASURY_ADDRESS = '0x949A2283494A2f35C4700a272BA87126417198E1';
-        const RPC_URL = 'https://gmonads.com';
+        const RPC_URL = 'https://rpc1.monad.xyz';
         const CHAIN_ID = 143;
         
         const ABI = [
@@ -791,4 +791,91 @@
                     gasLimit: gasEstimate.mul(120).div(100) // Add 20% buffer
                 });
                 
-                log('📨 TX sent: ' + tx.
+                log('📨 TX sent: ' + tx.hash.slice(0, 20) + '...', 'warning');
+                log('⏳ Waiting for confirmation...', 'warning');
+                
+                const receipt = await tx.wait();
+                
+                if (receipt.status === 1) {
+                    log('═══════════════════════════════', 'success');
+                    log('🎉 MINT SUCCESS!', 'success');
+                    log('═══════════════════════════════', 'success');
+                    log('✓ Received 5,000 SNADS!', 'success');
+                    log('⛽ Gas used: ' + receipt.gasUsed.toString(), 'info');
+                    log('🔗 TX: ' + receipt.transactionHash, 'success');
+                    log('⏰ Cooldown: 10 seconds', 'info');
+                    
+                    if (isFirstMint) {
+                        log('', 'info');
+                        log('✓ Next mints will work immediately (no 2-tx needed)', 'success');
+                    }
+                    
+                    document.getElementById('status').textContent = 'SUCCESS';
+                    document.getElementById('status').style.color = '#00ff41';
+                    
+                    await loadData();
+                } else {
+                    log('❌ TX failed', 'error');
+                    document.getElementById('status').textContent = 'FAILED';
+                    document.getElementById('status').style.color = '#ff4136';
+                }
+                
+            } catch (error) {
+                if (error.message.includes('user rejected') || error.code === 4001 || error.code === 'ACTION_REJECTED') {
+                    log('❌ Transaction rejected by user', 'error');
+                } else if (error.message.includes('Cooldown')) {
+                    log('⏰ Cooldown active - please wait', 'warning');
+                } else if (error.message.includes('insufficient funds')) {
+                    log('❌ Insufficient MON balance', 'error');
+                } else if (error.message.includes('Contract not deployed')) {
+                    log('❌ ERROR: Contract not deployed yet', 'error');
+                    log('Please check contract address', 'error');
+                } else if (error.message.includes('Wait for next block')) {
+                    log('❌ First mint requires 2 transactions', 'error');
+                    log('Please try minting again', 'warning');
+                } else {
+                    log('❌ ERROR: ' + error.message.substring(0, 100), 'error');
+                    if (error.reason) {
+                        log('Reason: ' + error.reason, 'error');
+                    }
+                }
+                
+                document.getElementById('status').textContent = 'ERROR';
+                document.getElementById('status').style.color = '#ff4136';
+                
+                console.error('Full error:', error);
+            } finally {
+                document.getElementById('mintBtn').classList.remove('mining');
+                setTimeout(() => {
+                    loadData();
+                }, 2000);
+            }
+        }
+
+        // Auto-connect if wallet is already connected
+        window.addEventListener('load', () => {
+            if (window.ethereum && window.ethereum.selectedAddress) {
+                setTimeout(connectWallet, 500);
+            }
+        });
+
+        // Handle account/network changes
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    log('🔌 Wallet disconnected', 'warning');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    log('🔄 Account changed, reloading...', 'info');
+                    setTimeout(() => location.reload(), 1000);
+                }
+            });
+
+            window.ethereum.on('chainChanged', () => {
+                log('🌐 Network changed, reloading...', 'info');
+                setTimeout(() => location.reload(), 1000);
+            });
+        }
+    </script>
+</body>
+</html>
