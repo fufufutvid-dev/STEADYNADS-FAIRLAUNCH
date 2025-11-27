@@ -364,7 +364,7 @@
             <div class="stat-box">
                 <div class="stat-label">YOUR BALANCE</div>
                 <div class="stat-value" id="balance">0</div>
-                <div class="stat-label">SNADS</div>
+                <div class="stat-label">STEADY</div>
             </div>
             <div class="stat-box">
                 <div class="stat-label">MINT COUNT</div>
@@ -374,7 +374,7 @@
             <div class="stat-box">
                 <div class="stat-label">TOTAL MINTED</div>
                 <div class="stat-value" id="totalMinted">0</div>
-                <div class="stat-label">/ 1B SNADS</div>
+                <div class="stat-label">/ 1B STEADY</div>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
@@ -396,7 +396,7 @@
                 </div>
                 <div class="hashrate-item">
                     <strong>MINT AMOUNT</strong>
-                    <span style="color: #00ffaa;">5000</span>
+                    <span style="color: #00ffaa;">2500</span>
                 </div>
                 <div class="hashrate-item">
                     <strong>REMAINING</strong>
@@ -417,7 +417,7 @@
             </div>
 
             <div class="controls">
-                <button class="btn" id="mintBtn" onclick="mintTokens()" disabled>⛏️ MINT 5000 SNADS (1 MON)</button>
+                <button class="btn" id="mintBtn" onclick="mintTokens()" disabled>⛏️ MINT 2500 STEADY (1 MON)</button>
             </div>
         </div>
 
@@ -426,11 +426,11 @@
                 <h3>▸ CONTRACT INFO</h3>
                 <div class="info-item">
                     <strong>CONTRACT:</strong><br>
-                    <small style="word-break: break-all;">0x9F93da6f9202fF6566b35D4D1Da6e1bb4a64EB56</small>
+                    <small style="word-break: break-all;">0xA16984b04D2041af93165fC297475641FA71D9f6</small>
                 </div>
                 <div class="info-item">
                     <strong>TREASURY:</strong><br>
-                    <small style="word-break: break-all;">0x949A2283494A2f35C4700a272BA87126417198E1</small>
+                    <small style="word-break: break-all;">0xa71407ED688B2E97bc217C0d05E366DEcD236731</small>
                 </div>
                 <div class="info-item">
                     <strong>NETWORK:</strong> Monad Mainnet
@@ -439,10 +439,10 @@
                     <strong>CHAIN ID:</strong> 143 (0x8F)
                 </div>
                 <div class="info-item">
-                    <strong>RPC:</strong> rpc1.monad.xyz
+                    <strong>RPC:</strong> https://rpc1.monad.xyz
                 </div>
                 <div class="info-item">
-                    <strong>TOTAL SUPPLY:</strong> 1,000,000,000 SNADS
+                    <strong>TOTAL SUPPLY:</strong> 1,000,000,000 STEADY
                 </div>
                 <div class="info-item">
                     <strong>MINTABLE:</strong> 900,000,000 (90%)
@@ -461,7 +461,7 @@
                     <strong>[2]</strong> Click MINT button (costs 1 MON)
                 </div>
                 <div class="info-item">
-                    <strong>[3]</strong> Receive 5,000 SNADS instantly
+                    <strong>[3]</strong> Receive 2,500 STEADY instantly
                 </div>
                 <div class="info-item">
                     <strong>[4]</strong> Wait 10 seconds cooldown
@@ -470,7 +470,7 @@
                     <strong>[5]</strong> Repeat up to 1,000 times per wallet
                 </div>
                 <div class="info-item">
-                    <strong>[6]</strong> Max 5,000,000 SNADS per wallet
+                    <strong>[6]</strong> Max 2,500,000 STEADY per wallet
                 </div>
                 <div class="info-item" style="margin-top: 20px; color: #00ffaa; border-left-color: #00ffaa;">
                     ✓ Anti-Bot Protection<br>
@@ -487,8 +487,8 @@
     </div>
 
     <script>
-        const CONTRACT_ADDRESS = '0x9F93da6f9202fF6566b35D4D1Da6e1bb4a64EB56';
-        const TREASURY_ADDRESS = '0x949A2283494A2f35C4700a272BA87126417198E1';
+        const CONTRACT_ADDRESS = '0xA16984b04D2041af93165fC297475641FA71D9f6';
+        const TREASURY_ADDRESS = '0xa71407ED688B2E97bc217C0d05E366DEcD236731';
         const RPC_URL = 'https://rpc1.monad.xyz';
         const CHAIN_ID = 143;
         
@@ -632,7 +632,6 @@
             if (!account || !contract) return;
             
             try {
-                // Test contract connectivity first
                 const code = await provider.getCode(CONTRACT_ADDRESS);
                 if (code === '0x') {
                     log('⚠️ WARNING: Contract not found at address', 'warning');
@@ -654,7 +653,6 @@
                 const balanceFormatted = parseFloat(ethers.utils.formatEther(balance));
                 document.getElementById('balance').textContent = balanceFormatted.toLocaleString(undefined, {maximumFractionDigits: 0});
                 
-                // Fix: totalMinted is already in wei, just format it directly
                 const mintedFormatted = parseFloat(ethers.utils.formatEther(minted));
                 document.getElementById('totalMinted').textContent = mintedFormatted.toLocaleString(undefined, {maximumFractionDigits: 0});
                 
@@ -684,7 +682,6 @@
                 console.error('Load error:', error);
                 log('❌ Error loading data: ' + error.message.substring(0, 80), 'error');
                 
-                // Try to provide helpful error messages
                 if (error.message.includes('call revert') || error.message.includes('execution reverted')) {
                     log('⚠️ Contract call failed - contract may not be deployed', 'warning');
                 }
@@ -707,7 +704,6 @@
             log('═══════════════════════════════', 'info');
 
             try {
-                // Check if contract exists first
                 const code = await provider.getCode(CONTRACT_ADDRESS);
                 if (code === '0x') {
                     throw new Error('Contract not deployed at this address');
@@ -716,9 +712,8 @@
                 const signer = provider.getSigner();
                 const contractWithSigner = contract.connect(signer);
 
-                // Check balance first
                 const balance = await signer.getBalance();
-                const required = ethers.utils.parseEther('1.1'); // Need extra for gas
+                const required = ethers.utils.parseEther('1.1');
                 
                 log('💰 Your balance: ' + ethers.utils.formatEther(balance) + ' MON', 'info');
                 
@@ -726,7 +721,6 @@
                     throw new Error('Insufficient MON balance. Need at least 1.1 MON (1 MON + gas)');
                 }
 
-                // Check if this is first mint for this wallet
                 const currentMintCount = await contract.mintCount(account);
                 const isFirstMint = currentMintCount.toNumber() === 0;
 
@@ -739,7 +733,6 @@
 
                 log('💰 Sending 1 MON...', 'warning');
                 
-                // Try to estimate gas
                 let gasEstimate;
                 try {
                     gasEstimate = await contractWithSigner.estimateGas.mint({
@@ -747,12 +740,10 @@
                     });
                     log('⛽ Estimated gas: ' + gasEstimate.toString(), 'info');
                 } catch (estimateError) {
-                    // Gas estimation failed - likely due to first mint bug
                     if (isFirstMint && estimateError.message.includes('Wait for next block')) {
                         log('⚠️ First mint initialization required', 'warning');
                         log('Sending initialization transaction (will fail but is needed)...', 'warning');
                         
-                        // Send the first transaction (will fail but sets firstMintBlock)
                         try {
                             const initTx = await contractWithSigner.mint({
                                 value: ethers.utils.parseEther('1'),
@@ -766,7 +757,6 @@
                         log('', 'info');
                         log('⏳ Waiting for next block...', 'warning');
                         
-                        // Wait for next block
                         const currentBlock = await provider.getBlockNumber();
                         while ((await provider.getBlockNumber()) === currentBlock) {
                             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -776,7 +766,6 @@
                         log('', 'info');
                         log('Transaction 2/2: Performing actual mint...', 'info');
                         
-                        // Now try the real mint
                         gasEstimate = await contractWithSigner.estimateGas.mint({
                             value: ethers.utils.parseEther('1')
                         });
@@ -789,7 +778,7 @@
                 
                 const tx = await contractWithSigner.mint({
                     value: ethers.utils.parseEther('1'),
-                    gasLimit: gasEstimate.mul(120).div(100) // Add 20% buffer
+                    gasLimit: gasEstimate.mul(120).div(100)
                 });
                 
                 log('📨 TX sent: ' + tx.hash.slice(0, 20) + '...', 'warning');
@@ -801,7 +790,7 @@
                     log('═══════════════════════════════', 'success');
                     log('🎉 MINT SUCCESS!', 'success');
                     log('═══════════════════════════════', 'success');
-                    log('✓ Received 5,000 SNADS!', 'success');
+                    log('✓ Received 2,500 STEADY!', 'success');
                     log('⛽ Gas used: ' + receipt.gasUsed.toString(), 'info');
                     log('🔗 TX: ' + receipt.transactionHash, 'success');
                     log('⏰ Cooldown: 10 seconds', 'info');
@@ -853,14 +842,12 @@
             }
         }
 
-        // Auto-connect if wallet is already connected
         window.addEventListener('load', () => {
             if (window.ethereum && window.ethereum.selectedAddress) {
                 setTimeout(connectWallet, 500);
             }
         });
 
-        // Handle account/network changes
         if (window.ethereum) {
             window.ethereum.on('accountsChanged', (accounts) => {
                 if (accounts.length === 0) {
