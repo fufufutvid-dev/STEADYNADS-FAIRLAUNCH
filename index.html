@@ -47,12 +47,33 @@
             backdrop-filter: blur(10px);
         }
 
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 10px #00ff41);
+        }
+
         h1 {
             font-size: 52px;
             text-shadow: 0 0 15px #00ff41, 0 0 30px #00ff41;
             letter-spacing: 6px;
-            display: inline-block;
             animation: glow 2s ease-in-out infinite;
+            margin: 0;
         }
 
         @keyframes glow {
@@ -61,7 +82,6 @@
         }
 
         .wallet-btn {
-            float: right;
             background: transparent;
             border: 2px solid #00ff41;
             color: #00ff41;
@@ -335,14 +355,26 @@
                 grid-template-columns: 1fr 1fr;
             }
             
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .logo {
+                width: 60px;
+                height: 60px;
+            }
+            
             h1 {
                 font-size: 36px;
             }
             
             .wallet-btn {
-                float: none;
-                display: block;
-                margin-top: 20px;
+                width: 100%;
+            }
+
+            .header-top {
+                flex-direction: column;
             }
         }
     </style>
@@ -353,9 +385,14 @@
 
     <div class="container">
         <header>
-            <h1>⚡ STEADYNADS</h1>
-            <button class="wallet-btn" id="connectBtn" onclick="connectWallet()">CONNECT WALLET</button>
-            <div style="clear: both; margin-top: 20px;">
+            <div class="header-top">
+                <div class="header-content">
+                    <img src="https://files.catbox.moe/ce28ux.png" alt="STEADYNADS Logo" class="logo">
+                    <h1>⚡ STEADYNADS</h1>
+                </div>
+                <button class="wallet-btn" id="connectBtn" onclick="connectWallet()">CONNECT WALLET</button>
+            </div>
+            <div style="margin-top: 20px;">
                 <small>FAIR LAUNCH TOKEN - MONAD MAINNET</small>
             </div>
         </header>
@@ -413,7 +450,7 @@
                 <div class="terminal-line info">│ Fair Launch • Anti-Bot      │</div>
                 <div class="terminal-line info">└──────────────────────────────┘</div>
                 <div class="terminal-line">System initialized...</div>
-                <div class="terminal-line">Awaiting wallet connection...</div>
+                <div class="terminal-line">Connecting to Monad RPC...</div>
             </div>
 
             <div class="controls">
@@ -508,6 +545,8 @@
         let provider = null;
         let contract = null;
         let updateInterval = null;
+        let publicProvider = null;
+        let publicContract = null;
 
         // Matrix background
         const canvas = document.getElementById('matrix');
@@ -562,6 +601,51 @@
             
             while (terminal.children.length > 150) {
                 terminal.removeChild(terminal.firstChild);
+            }
+        }
+
+        // Initialize public provider for reading data without wallet
+        async function initPublicProvider() {
+            try {
+                publicProvider = new ethers.providers.JsonRpcProvider(RPC_URL, CHAIN_ID);
+                publicContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, publicProvider);
+                log('🌐 Connected to Monad RPC', 'info');
+                await loadPublicData();
+                setInterval(loadPublicData, 10000); // Update every 10 seconds
+            } catch (error) {
+                log('⚠️ Could not connect to RPC: ' + error.message, 'warning');
+            }
+        }
+
+        // Load public data without wallet connection
+        async function loadPublicData() {
+            if (!publicContract) return;
+            
+            try {
+                const code = await publicProvider.getCode(CONTRACT_ADDRESS);
+                if (code === '0x') {
+                    log('⚠️ Contract not deployed yet', 'warning');
+                    document.getElementById('totalMinted').textContent = '0';
+                    document.getElementById('progressFill').style.width = '0%';
+                    return;
+                }
+
+                const minted = await publicContract.totalMinted();
+                const mintedFormatted = parseFloat(ethers.utils.formatEther(minted));
+                
+                document.getElementById('totalMinted').textContent = mintedFormatted.toLocaleString(undefined, {maximumFractionDigits: 0});
+                
+                const progress = (mintedFormatted / 1000000000) * 100;
+                document.getElementById('progressFill').style.width = progress + '%';
+                
+                // Only log once when contract is found
+                if (!window.contractLoggedOnce) {
+                    log('✓ Contract active - ' + mintedFormatted.toLocaleString() + ' STEADY minted', 'success');
+                    window.contractLoggedOnce = true;
+                }
+            } catch (error) {
+                // Silently fail for public data
+                console.error('Public data load error:', error);
             }
         }
 
@@ -843,6 +927,10 @@
         }
 
         window.addEventListener('load', () => {
+            // Initialize public provider immediately
+            initPublicProvider();
+            
+            // Auto-connect if wallet was previously connected
             if (window.ethereum && window.ethereum.selectedAddress) {
                 setTimeout(connectWallet, 500);
             }
